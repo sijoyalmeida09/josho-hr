@@ -1,0 +1,51 @@
+# Fly.io config for josho-hr worker.
+#
+# IMPORTANT: this app must be deployed from the MONOREPO ROOT because the
+# Dockerfile COPYs from automation/sijoy-os/job_hunter_v2/. Run:
+#
+#   cd the repo root
+#   fly deploy --config josho-hr/worker/fly.toml \
+#              --dockerfile josho-hr/worker/Dockerfile
+#
+# Secrets:
+#   fly secrets set \
+#     SUPABASE_URL=... \
+#     SUPABASE_SERVICE_ROLE_KEY=... \
+#     ENCRYPTION_KEY=<base64-32B> \
+#     TRIAL_POOL_GROQ_KEY=... \
+#     TRIAL_POOL_OPENROUTER_KEY=... \
+#     --app josho-hr-worker
+
+app = "josho-hr-worker"
+primary_region = "bos"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  POLL_INTERVAL_SECONDS = "5"
+  LEASE_SECONDS = "900"
+  PLAYWRIGHT_HEADLESS = "true"
+  AUTO_APPLIER_ALLOW_SUBMIT = "false"
+  FEATURE_SIJOY_TAX_ENABLED = "true"
+  FEATURE_N8N_OUTBOUND_ENABLED = "true"
+  LOG_LEVEL = "INFO"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/health"

@@ -1,0 +1,21 @@
+# Ignore EVERYTHING in the monorepo, then whitelist only what we need.
+# The Dockerfile COPYs from: josho-hr/worker/ and automation/sijoy-os/job_hunter_v2/
+*
+
+# Whitelist worker source
+!josho-hr/worker/
+
+# Whitelist the vendored job_hunter_v2
+!automation/sijoy-os/job_hunter_v2/
+# But exclude its data/cache folders
+automation/sijoy-os/job_hunter_v2/data/
+automation/sijoy-os/job_hunter_v2/__pycache__/
+
+# Exclude noise from whitelisted dirs
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/*.log
+**/.env
+**/.env.*
+**/node_modules/

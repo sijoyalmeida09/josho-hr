@@ -1,0 +1,26 @@
+name: josho-hr retention cron
+
+on:
+  schedule:
+    # Daily at 03:30 UTC (GATE-COST-02)
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  purge:
+    name: Enforce retention policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call worker retention endpoint
+        env:
+          WORKER_BASE_URL: ${{ secrets.WORKER_BASE_URL }}
+          WORKER_CRON_TOKEN: ${{ secrets.WORKER_CRON_TOKEN }}
+        run: |
+          if [ -z "$WORKER_BASE_URL" ]; then
+            echo "WORKER_BASE_URL not set (Phase 1). Nothing to do."
+            exit 0
+          fi
+          curl -fsSL -X POST "$WORKER_BASE_URL/internal/retention" \
+            -H "Authorization: Bearer $WORKER_CRON_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"traces_days":90,"emails_days":365,"deleted_accounts_hours":24}'

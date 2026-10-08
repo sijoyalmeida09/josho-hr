@@ -1,0 +1,26 @@
+name: josho-hr worker cron
+
+on:
+  schedule:
+    # Every 2 hours (plan section 3 scheduler)
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  enqueue:
+    name: Enqueue scheduled per-user runs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping worker enqueue endpoint
+        env:
+          WORKER_BASE_URL: ${{ secrets.WORKER_BASE_URL }}
+          WORKER_CRON_TOKEN: ${{ secrets.WORKER_CRON_TOKEN }}
+        run: |
+          if [ -z "$WORKER_BASE_URL" ]; then
+            echo "WORKER_BASE_URL not set (Phase 1). Nothing to do."
+            exit 0
+          fi
+          curl -fsSL -X POST "$WORKER_BASE_URL/internal/enqueue" \
+            -H "Authorization: Bearer $WORKER_CRON_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"source":"github-actions-cron"}'

@@ -1,0 +1,54 @@
+# CODEOWNERS for josho-hr
+#
+# This file reflects the Team of 10 role assignments from the plan.
+# Concrete usernames are left as role tags until Phase 2 assigns maintainers.
+
+# Default owner: architect
+*                                   @architect
+
+# Policy, legal, user-facing copy
+/docs/policy.md                     @product-manager @tech-writer
+/docs/terms.md                      @tech-writer @security-engineer
+/docs/privacy.md                    @tech-writer @security-engineer
+/docs/ux-failure-modes.md           @frontend-engineer @product-manager
+
+# Security and access control
+/docs/security.md                   @security-engineer
+/docs/security-signoff.md           @security-engineer
+/supabase/migrations/0002_rls.sql   @database-engineer @security-engineer
+/supabase/migrations/0003_storage_policies.sql  @database-engineer @security-engineer
+/supabase/migrations/0005_audit.sql @security-engineer
+
+# Data
+/supabase/migrations/0001_init.sql  @database-engineer
+/supabase/migrations/0004_seed_sijoy_system.sql  @database-engineer @architect
+/docs/data-model.md                 @database-engineer
+
+# Reliability, ops, cost
+/docs/runbook.md                    @backend-engineer @devops-sre
+/docs/rollback.md                   @devops-sre
+/docs/incident-playbook.md          @devops-sre
+/docs/observability.md              @devops-sre @backend-engineer
+/docs/limits.md                     @devops-sre
+/docs/retention.md                  @devops-sre
+/.github/workflows/                 @devops-sre
+/worker/config/limits.py            @devops-sre @backend-engineer
+
+# Worker core (ex-chokepoints)
+/worker/tax_trigger.py              @architect @backend-engineer
+/worker/n8n_dispatcher.py           @full-stack-dev
+/worker/event_emitter.py            @backend-engineer
+
+# Frontend
+/web/                               @frontend-engineer @full-stack-dev
+/web/__tests__/rls.isolation.test.ts @qa-engineer @security-engineer
+
+# Integrations
+/docs/n8n-integration.md            @full-stack-dev
+/n8n-templates/                     @full-stack-dev
+/docs/companion.md                  @full-stack-dev @security-engineer
+/companion/                         @full-stack-dev
+
+# Launch packet
+/docs/launch-packet.md              @architect
+/docs/reliability-report.md         @backend-engineer @devops-sre

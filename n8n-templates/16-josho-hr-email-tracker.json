@@ -1,0 +1,69 @@
+{
+  "name": "16 — josho-hr Email Tracker",
+  "meta": {
+    "contractVersion": "v1",
+    "gate": "GATE-INT-01",
+    "description": "Importable n8n workflow. Watches user's Gmail inbox and forwards job-related emails to josho-hr's inbound webhook. Configure: set JOSHO_HR_WEBHOOK and JOSHO_HR_HMAC credentials, then activate."
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
+        "filters": {
+          "q": "newer_than:1d subject:(interview OR application OR offer OR rejection OR recruiter)"
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { randomUUID, createHmac } = require('crypto');\nconst body = {\n  user_token: $env.JOSHO_HR_USER_TOKEN,\n  subject: $json.subject || '',\n  from: ($json.from && $json.from.value && $json.from.value[0] && $json.from.value[0].address) || '',\n  classification: '',\n  received_at: new Date($json.internalDate ? Number($json.internalDate) : Date.now()).toISOString(),\n  body_preview: ($json.snippet || '').slice(0, 500)\n};\nconst raw = JSON.stringify(body);\nconst signature = 'sha256=' + createHmac('sha256', $env.JOSHO_HR_HMAC).update(raw).digest('hex');\nreturn [{\n  json: { body, raw },\n  binary: {},\n  headers: {\n    'Content-Type': 'application/json',\n    'X-JoshoHR-Contract': 'v1',\n    'X-JoshoHR-Signature': signature,\n    'Idempotency-Key': randomUUID()\n  }\n}];"
+      },
+      "id": "sign-payload",
+      "name": "Sign Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.JOSHO_HR_WEBHOOK}}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-JoshoHR-Contract", "value": "v1" },
+            { "name": "X-JoshoHR-Signature", "value": "={{$json.headers['X-JoshoHR-Signature']}}" },
+            { "name": "Idempotency-Key", "value": "={{$json.headers['Idempotency-Key']}}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{$json.raw}}",
+        "options": {
+          "response": { "response": { "fullResponse": false } },
+          "retry": { "retry": { "maxTries": 3, "waitBetweenTries": 1000 } }
+        }
+      },
+      "id": "post-webhook",
+      "name": "POST to josho-hr",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": { "main": [[{ "node": "Sign Payload", "type": "main", "index": 0 }]] },
+    "Sign Payload": { "main": [[{ "node": "POST to josho-hr", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "v1.0.0",
+  "tags": ["josho-hr", "email", "gmail", "integration"]
+}
